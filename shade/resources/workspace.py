@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import UUID
 
 import requests
@@ -55,5 +56,47 @@ class Workspace(ABCResource):
 
         raise ValueError(f'No workspace with name {name}')
 
-    def create_workspace(self):
-        raise NotImplementedError
+    def create_workspace(
+        self,
+        name: str,
+        domain: str,
+        description: Optional[str] = None,
+        thumbnail: Optional[str] = None,
+    ) -> dict:
+        """
+        Create a new workspace
+        :param name: The name of the workspace
+        :param domain: The domain for the workspace
+        :param description: The description for the workspace
+        :param thumbnail: The thumbnail for the workspace
+        :return: The created workspace details
+        """
+        payload = {
+            'name': name,
+            'description': description,
+            'thumbnail': thumbnail,
+            'domain': domain,
+            'team_size_analytics': '1-10',
+            'team_usage_analytics': 'team',
+        }
+
+        resp = requests.post(
+            self.auth.remote_url + '/workspaces',
+            headers={'Authorization': self.auth.api_key},
+            json=payload,
+        )
+        resp.raise_for_status()
+        return resp.json()
+
+    def delete_workspace(self, id_: UUID) -> dict:
+        """
+        Delete the workspace with the given id
+        :param id_: The id of the workspace
+        :return: The deleted workspace
+        """
+        resp = requests.delete(
+            self.auth.remote_url + f'/workspaces/{id_}',
+            headers={'Authorization': self.auth.api_key},
+        )
+        resp.raise_for_status()
+        return resp.json()
